@@ -1,0 +1,60 @@
+{
+    "questions": [
+        {
+            "text": "What is the capital of France?",
+            "metadata": {
+                "subject": "Geography"
+            }
+        },
+        {
+            "text": "What is the capital city of France?",
+            "metadata": {
+                "subject": "Geography"
+            }
+        }
+    ],
+    "audit_logs": [
+        {
+            "timestamp": "2026-08-24T07:17:45.271665",
+            "event_type": "QUESTION_ACCEPTED",
+            "details": {
+                "metadata": {
+                    "subject": "Geography"
+                }
+            }
+        },
+        {
+            "timestamp": "2026-08-24T07:17:45.300668",
+            "event_type": "QUESTION_ACCEPTED",
+            "details": {
+                "metadata": {
+                    "subject": "Geography"
+                }
+            }
+        },
+        {
+            "timestamp": "2026-08-24T07:17:45.982279",
+            "event_type": "UNAUTHORIZED_UNLOCK",
+            "details": {
+                "center_id": "CENTER_001",
+                "shares_count": 3
+            }
+        },
+        {
+            "timestamp": "2026-08-24T07:17:45.988123",
+            "event_type": "UNAUTHORIZED_UNLOCK",
+            "details": {
+                "center_id": "CENTER_001",
+                "shares_count": 2
+            }
+        },
+        {
+            "timestamp": "2026-08-24T07:17:45.993129",
+            "event_type": "UNLOCK_FAILED",
+            "details": {
+                "center_id": "CENTER_001",
+                "error": "Decryption failed. Invalid key or modified ciphertext."
+            }
+        }
+    ]
+}
