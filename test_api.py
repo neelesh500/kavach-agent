@@ -1,11 +1,12 @@
 from fastapi.testclient import TestClient
 import time
+import asyncio
 from api_server import app, EXAM_STATE, db
 
 client = TestClient(app)
 
 def setup_module(module):
-    db.clear()
+    asyncio.run(db.clear())
 
 def test_submit_questions():
     # First question

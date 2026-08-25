@@ -4,6 +4,10 @@ from typing import Dict, List
 
 from dotenv import load_dotenv
 from pymongo import AsyncMongoClient
+try:
+    from mongomock_motor import AsyncMongoMockClient
+except ImportError:
+    AsyncMongoMockClient = None
 
 load_dotenv()
 
@@ -19,7 +23,13 @@ class DatabaseMongoDB:
         if not database_name:
             raise ValueError("MONGODB_DATABASE is not configured")
 
-        self.client = AsyncMongoClient(mongo_uri)
+        if mongo_uri.startswith("mock://"):
+            if AsyncMongoMockClient is None:
+                raise ValueError("mongomock_motor is required for mock:// URIs")
+            self.client = AsyncMongoMockClient()
+        else:
+            self.client = AsyncMongoClient(mongo_uri)
+            
         self.db = self.client[database_name]
 
         self.questions = self.db["questions"]
