@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Kavach Controller</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      width: 360px;
+      padding: 15px;
+      background-color: #0b0f19;
+      color: #eaeaea;
+      margin: 0;
+    }
+
+    h2 {
+      text-align: center;
+      color: #00d2ff;
+      margin-top: 0;
+      font-size: 18px;
+      letter-spacing: 1px;
+    }
+
+    .tabs {
+      display: flex;
+      margin-bottom: 15px;
+      border-bottom: 2px solid #1a2a40;
+    }
+
+    .tab {
+      flex: 1;
+      text-align: center;
+      padding: 8px;
+      cursor: pointer;
+      color: #7b8fa8;
+      font-weight: bold;
+      transition: 0.3s;
+    }
+
+    .tab.active {
+      color: #00d2ff;
+      border-bottom: 2px solid #00d2ff;
+      margin-bottom: -2px;
+    }
+
+    .panel {
+      background: #111827;
+      padding: 15px;
+      border-radius: 8px;
+      border: 1px solid #1f2937;
+      margin-bottom: 15px;
+    }
+
+    .panel.hidden {
+      display: none;
+    }
+
+    label {
+      font-size: 12px;
+      margin-bottom: 5px;
+      display: block;
+      color: #9ca3af;
+    }
+
+    input,
+    textarea {
+      width: calc(100% - 16px);
+      padding: 8px;
+      margin-bottom: 12px;
+      border: 1px solid #374151;
+      border-radius: 4px;
+      background-color: #1f2937;
+      color: white;
+      font-family: inherit;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background: #1d4ed8;
+    }
+
+    #result {
+      margin-top: 10px;
+      font-size: 11px;
+      word-wrap: break-word;
+      background: #0f172a;
+      padding: 10px;
+      border-radius: 5px;
+      display: none;
+      color: #4ade80;
+      border: 1px solid #1e293b;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+
+    .error-msg {
+      color: #f87171 !important;
+    }
+  </style>
+</head>
+
+<body>
+  <h2>🛡️ Kavach Zero-Trust Client</h2>
+
+  <div class="tabs">
+    <div class="tab active" id="tabAdmin">Create & Encrypt</div>
+    <div class="tab" id="tabCenter">Client Decrypt</div>
+  </div>
+
+  <div id="panelAdmin" class="panel">
+    <label>Backend API URL</label>
+    <input type="text" id="apiUrl" value="http://localhost:8000" />
+    <label>Questions Count & Threshold (k)</label>
+    <div style="display:flex; gap:10px;">
+      <input type="number" id="numQuestions" value="5" placeholder="Q's" style="width:40%">
+      <input type="number" id="thresholdK" value="3" placeholder="k" style="width:40%">
+    </div>
+    <label>Total Shares (n)</label>
+    <input type="number" id="totalShares" value="5" />
+    <button id="adminGenerateBtn">Generate & Encrypt Paper</button>
+  </div>
+
+  <div id="panelCenter" class="panel hidden">
+    <label>Backend API URL</label>
+    <input type="text" id="apiUrlCenter" value="http://localhost:8000" />
+    <label>Center ID</label>
+    <input type="text" id="centerId" value="CX-9021" />
+    <label>Input Shares (JSON format [[x,y], ...])</label>
+    <textarea id="sharesInput" rows="3" placeholder="[[1, 1234...], [2, 5678...]]"></textarea>
+    <button id="centerUnlockBtn">Fetch & Client-Side Unlock</button>
+  </div>
+
+  <div id="result"></div>
+
+  <script src="crypto.js"></script>
+  <script src="watermark_engine.js"></script>
+  <script src="popup.js"></script>
+</body>
+
+</html>

@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from typing import List, Tuple
 import time
 import os
+import base64
 
 from database_mock import DatabaseMock
 from similarity_guard import SimilarityGuard
@@ -86,9 +87,11 @@ async def encrypt_paper(req: EncryptRequest):
     EXAM_STATE["encrypted_paper"] = encrypted
     EXAM_STATE["shares"] = shares
     
+    shares_str = [(str(x), str(y)) for x, y in shares]
+    
     return {
         "status": "success",
-        "shares": shares,
+        "shares": shares_str,
         "message": f"Generated {req.total_shares} shares with threshold {req.threshold_k}"
     }
 
@@ -125,3 +128,14 @@ async def trace_watermark(req: TraceRequest):
     if not metadata:
         raise HTTPException(status_code=404, detail="No watermark found in payload")
     return {"metadata": metadata}
+
+@app.get("/api/v1/paper/fetch_encrypted")
+async def fetch_encrypted():
+    if not EXAM_STATE.get("encrypted_paper"):
+        raise HTTPException(status_code=404, detail="No paper encrypted yet")
+    return {
+        "encrypted_paper": base64.b64encode(EXAM_STATE["encrypted_paper"]).decode('utf-8'),
+        "threshold_k": EXAM_STATE["threshold_k"],
+        "exam_start_time": EXAM_STATE["exam_start_time"]
+    }
+
