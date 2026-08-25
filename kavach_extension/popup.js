@@ -102,7 +102,63 @@ document.getElementById('centerUnlockBtn').addEventListener('click', async () =>
         const sessionToken = "ST-" + Math.random().toString(36).substring(7);
         const watermarked = KavachWatermark.embedWatermark(plaintext, centerId, sessionToken);
 
-        showResult(`🔓 EXAM PAPER UNLOCKED 🔓\n\n${watermarked}`);
+        showResult(`🔓 EXAM PAPER UNLOCKED 🔓\n\nOpening your beautiful Exam Paper in a new tab...`);
+
+        // Open the beautifully formatted paper in a new tab like a PDF
+        const newWindow = window.open("", "_blank");
+        newWindow.document.write(`
+        <html>
+        <head>
+            <title>ZEEA Examination Paper</title>
+            <style>
+                body {
+                    font-family: 'Times New Roman', Times, serif;
+                    line-height: 1.6;
+                    padding: 40px 60px;
+                    max-width: 900px;
+                    margin: 0 auto;
+                    color: #000;
+                    background: #fff;
+                }
+                .watermark {
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%) rotate(-45deg);
+                    font-size: 80px;
+                    color: rgba(200, 200, 200, 0.2);
+                    z-index: -1;
+                    pointer-events: none;
+                }
+                pre {
+                    font-family: 'Times New Roman', Times, serif;
+                    font-size: 14px;
+                    white-space: pre-wrap;
+                }
+                button {
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    padding: 10px 20px;
+                    background: #2563eb;
+                    color: white;
+                    border: none;
+                    border-radius: 5px;
+                    cursor: pointer;
+                }
+                @media print {
+                    button { display: none; }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="watermark">CENTER ID: ${centerId}</div>
+            <button onclick="window.print()">🖨️ Print to PDF</button>
+            <pre>${watermarked}</pre>
+        </body>
+        </html>
+        `);
+        newWindow.document.close();
 
     } catch (err) {
         showResult(`Error: ${err.message}`, true);

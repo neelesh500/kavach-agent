@@ -9,6 +9,7 @@ from database_mongodb import DatabaseMongoDB
 from similarity_guard import SimilarityGuard
 from crypto_core import CryptoManager, DoubleGateEnforcer
 from watermark_engine import WatermarkEngine
+from ai_engine import ZEEAAIEngine
 
 
 app = FastAPI(title="Project Kavach Backend API")
@@ -18,6 +19,9 @@ db = DatabaseMongoDB()
 
 # Similarity checker
 similarity_guard = SimilarityGuard(threshold=0.85)
+
+# AI Engine for Blueprint Generation
+ai_engine = ZEEAAIEngine()
 
 
 # ---------------------------------------------------------
@@ -132,49 +136,61 @@ async def submit_question(payload: QuestionPayload):
 
 @app.post("/api/v1/paper/generate")
 async def generate_paper(req: GeneratePaperRequest):
+    # Get all questions
+    db_questions = await db.get_questions()
 
-    # Get random questions from MongoDB
-    questions = await db.get_random_questions(
-        req.num_questions
-    )
+    if not db_questions:
+        raise HTTPException(status_code=400, detail="Database is empty. Seed questions first.")
 
-    # Check if enough questions exist
-    if len(questions) < req.num_questions:
+    try:
+        # Pass to the AI Engine for Blueprint compliance
+        selected_ids = await ai_engine.build_paper_with_ai(db_questions)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-        raise HTTPException(
-            status_code=400,
-            detail=(
-                f"Not enough questions in the database "
-                f"(found {len(questions)}, "
-                f"wanted {req.num_questions})"
-            )
-        )
+    # Filter out the AI selected questions
+    final_questions = [q for q in db_questions if q["id"] in selected_ids]
+
+    if not final_questions:
+        raise HTTPException(status_code=400, detail="AI couldn't find matching questions for the blueprint.")
 
     # Create exam paper
     paper_lines = [
-        "Confidential Exam Paper",
-        "=" * 40
+        "====== CONFIDENTIAL EXAM PAPER (ZEEA BLUEPRINT) ======",
+        "Total Marks: 720 | Total Questions: 180 | +4 per correct",
+        "=" * 54
     ]
-
-    for i, q in enumerate(questions, start=1):
-        paper_lines.append(
-            f"Q{i}: {q['text']}"
-        )
+    
+    current_subject = ""
+    for i, q in enumerate(final_questions, start=1):
+        meta = q.get("metadata", {})
+        subj = meta.get("subject", "General")
+        diff = meta.get("difficulty", "Medium")
+        
+        # Add Subject Headers to make it look professional
+        if subj != current_subject:
+            paper_lines.append(f"\n--- SECTION: {subj.upper()} ---")
+            current_subject = subj
+            
+        paper_lines.append(f"\nQ{i}. [{diff}] {q['text']}")
+        
+        options = meta.get("options", [])
+        if options:
+            for opt in options:
+                paper_lines.append(f"   {opt}")
+        else:
+            paper_lines.append("   A) ...\n   B) ...\n   C) ...\n   D) ...")
 
     paper_text = "\n\n".join(paper_lines)
 
-    # Store audit log
-    await db.log_audit(
-        "PAPER_GENERATED",
-        {
-            "num_questions": len(questions)
-        }
-    )
+    await db.log_audit("PAPER_GENERATED_VIA_AI", {"num_questions": len(final_questions)})
 
     return {
         "status": "success",
         "paper_text": paper_text
     }
+
+
 
 
 # ---------------------------------------------------------
