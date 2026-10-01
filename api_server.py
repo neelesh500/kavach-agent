@@ -1,10 +1,11 @@
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Tuple
 import time
 import os
 
-from database_mongodb import DatabaseMongoDB
+from database_mock import DatabaseMock
 from similarity_guard import SimilarityGuard
 from crypto_core import CryptoManager, DoubleGateEnforcer
 from watermark_engine import WatermarkEngine
@@ -12,8 +13,17 @@ from watermark_engine import WatermarkEngine
 
 app = FastAPI(title="Project Kavach Backend API")
 
-# MongoDB database
-db = DatabaseMongoDB()
+# Setup CORS to allow extension popup to communicate with backend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins (including chrome-extension://)
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
+
+# Use SQLite Mock DB instead of MongoDB to run locally without setup
+db = DatabaseMock()
 
 # Similarity checker
 similarity_guard = SimilarityGuard(threshold=0.85)
@@ -218,10 +228,13 @@ async def encrypt_paper(req: EncryptRequest):
     EXAM_STATE["master_secret"] = master_secret
     EXAM_STATE["encrypted_paper"] = encrypted
     EXAM_STATE["shares"] = shares
+    
+    # Send shares as strings to avoid JS double-precision dataloss
+    str_shares = [[s[0], str(s[1])] for s in shares]
 
     return {
         "status": "success",
-        "shares": shares,
+        "shares": str_shares,
         "message": (
             f"Generated {req.total_shares} shares "
             f"with threshold {req.threshold_k}"
@@ -345,3 +358,7 @@ async def trace_watermark(req: TraceRequest):
     return {
         "metadata": metadata
     }
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("api_server:app", host="0.0.0.0", port=8000, reload=True)
