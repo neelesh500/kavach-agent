@@ -1,8 +1,9 @@
 const API_BASE = "http://127.0.0.1:8000/api/v1";
 
 document.addEventListener("DOMContentLoaded", () => {
-    // Check Backend Connection
+    // Check Backend Connection automatically every 2 seconds
     checkBackendConnection();
+    setInterval(checkBackendConnection, 2000);
 
     // Tab Navigation
     const tabs = document.querySelectorAll('.tab-btn');
