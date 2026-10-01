@@ -5,17 +5,19 @@ from typing import Dict, List
 from datetime import datetime
 
 class DatabaseMock:
-    def __init__(self, filepath="kavach.db"):
+    """Mock SQLite database for localized data persistence"""
+    
+    def __init__(self, filepath: str = "kavach.db") -> None:
         self.filepath = filepath
         self._init_db()
     
-    def _get_connection(self):
+    def _get_connection(self) -> sqlite3.Connection:
         # We use check_same_thread=False because FastAPI might share this across threads
         conn = sqlite3.connect(self.filepath, check_same_thread=False)
         conn.row_factory = sqlite3.Row
         return conn
 
-    def _init_db(self):
+    def _init_db(self) -> None:
         with self._get_connection() as conn:
             cursor = conn.cursor()
             # Create questions table

@@ -1,0 +1,17 @@
+{
+    "manifest_version": 3,
+    "name": "Kavach Security Agent",
+    "version": "1.0.0",
+    "description": "Secure exam paper management and watermarking extension powered by Kavach Backend.",
+    "action": {
+        "default_popup": "popup.html",
+        "default_title": "Project Kavach"
+    },
+    "permissions": [
+        "storage"
+    ],
+    "host_permissions": [
+        "http://127.0.0.1:8000/*",
+        "http://localhost:8000/*"
+    ]
+}

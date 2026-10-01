@@ -1,8 +1,9 @@
-const API_BASE = "http://127.0.0.1:8000/api/v1";
+const API_BASE = "http://localhost:8000/api/v1";
 
 document.addEventListener("DOMContentLoaded", () => {
-    // Check Backend Connection
+    // Check Backend Connection automatically every 2 seconds
     checkBackendConnection();
+    setInterval(checkBackendConnection, 2000);
 
     // Tab Navigation
     const tabs = document.querySelectorAll('.tab-btn');
@@ -107,8 +108,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 <h4>Success! Encrypted Paper Created</h4>
                 <p class="small-info">Generated ${encryptData.shares.length} shares. Paper is masked.</p>
                 <div style="margin-top: 12px;">
-                    <button id="downloadSharesBtn" style="background: var(--accent-color); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 11px;">
-                        ⬇️ Download Paper & Shares
+                    <button id="downloadSharesBtn" class="action-btn">
+                        ⬇️ Download Paper & Shares (Admin View)
                     </button>
                 </div>
             `;
@@ -118,38 +119,91 @@ document.addEventListener("DOMContentLoaded", () => {
             document.getElementById('downloadSharesBtn').addEventListener('click', (e) => {
                 e.preventDefault();
 
-                let shareLines = encryptData.shares.map((s, i) => `Share ${i + 1}:  [X: ${s[0]}, Y: ${s[1]}]`).join('\n');
+                let shareLines = encryptData.shares.map((s, i) => `<b>Share ${i + 1}:</b> <code>[X: ${s[0]}, Y: ${s[1]}]</code>`).join('<br>');
 
-                const readableText = `================================================
-           KAVACH SECURE EXAM TICKET
-================================================
+                // Format the paper raw text into a professional layout!
+                let formattedPaper = paperText
+                    .replace(/======(.*?)======/g, '<h2 class="paper-header">$1</h2>')
+                    .replace(/--- SECTION: (.*?) ---/g, '<h3 class="section-title">$1</h3>')
+                    .replace(/(Q\d+\..*?)\n/g, '<div class="question"><b>$1</b></div>')
+                    .replace(/   ([A-D]\) .*?)(?=\n|$)/g, '<div class="option">$1</div>');
 
-Date Generated : ${new Date().toLocaleString()}
-Threshold (K)  : 3 (Minimum required to unlock)
-Total Shares   : 5
+                const htmlContent = `
+                    <html>
+                        <head>
+                            <title>Kavach_Secure_Paper_${Date.now()}</title>
+                            <style>
+                                body { font-family: 'Times New Roman', serif; background: #fff; color: #000; padding: 40px; line-height: 1.6; max-width: 900px; margin: 0 auto; }
+                                .container { border: 2px solid #222; padding: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+                                
+                                /* Ticket Styling */
+                                .ticket-section { border-bottom: 2px dashed #666; padding-bottom: 30px; margin-bottom: 30px; font-family: 'Arial', sans-serif; }
+                                .ticket-header { text-align: center; color: #1e3a8a; border-bottom: 1px solid #1e3a8a; padding-bottom: 15px; text-transform: uppercase; letter-spacing: 2px; }
+                                .meta-info { display: flex; justify-content: space-between; margin-top: 20px; font-size: 14px; background: #f8fafc; padding: 15px; border-left: 4px solid #1e3a8a; }
+                                .warning { margin-top: 20px; color: #b91c1c; font-weight: bold; background: #fee2e2; padding: 10px; text-align: center; border-radius: 4px; }
+                                .shares-container { margin-top: 20px; background: #f1f5f9; padding: 15px; border-radius: 6px; font-family: monospace; font-size: 13px; line-height: 1.8; word-break: break-all; }
+                                
+                                /* Paper Styling */
+                                .paper-section { position: relative; }
+                                .paper-header { text-align: center; text-transform: uppercase; font-size: 22px; margin-bottom: 30px; border-bottom: 2px solid #000; padding-bottom: 10px; }
+                                .section-title { font-size: 18px; text-decoration: underline; margin-top: 30px; margin-bottom: 15px; }
+                                .question { font-size: 15px; margin-top: 20px; text-align: justify; }
+                                .option { margin-left: 20px; font-size: 14px; margin-top: 5px; }
+                                
+                                .footer { text-align: center; margin-top: 40px; font-size: 12px; color: #666; border-top: 1px solid #ccc; padding-top: 15px; font-family: Arial, sans-serif; }
+                                
+                                @media print {
+                                    body { padding: 0; box-shadow: none; }
+                                    .container { border: none; padding: 0; box-shadow: none; }
+                                }
+                            </style>
+                        </head>
+                        <body>
+                            <div class="container">
+                                <!-- Secure Ticket Header -->
+                                <div class="ticket-section">
+                                    <h2 class="ticket-header">🔒 KAVACH SECURE EXAM TICKET</h2>
+                                    <div class="meta-info">
+                                        <div><b>Date Generated:</b> ${new Date().toLocaleString()}<br><b>Total Shares:</b> 5</div>
+                                        <div><b>Threshold (K):</b> 3 (Minimum required to unlock)<br><b>System:</b> Kavach Enforcer</div>
+                                    </div>
+                                    <div class="warning">
+                                        ⚠ CONFIDENTIAL: Keep the following share keys strictly confidential! Distribute them across distinct examination centers.
+                                    </div>
+                                    <div class="shares-container">
+                                        <h3>SHARE KEYS</h3>
+                                        ${shareLines}
+                                    </div>
+                                </div>
 
-Keep the following share keys strictly confidential! 
-Distribute them among distinct examination centers.
+                                <!-- Actual Generated Paper Preview -->
+                                <div class="paper-section">
+                                    <div style="text-align: center; font-family: Arial; color: #666; font-size: 11px; letter-spacing: 2px; margin-bottom: 20px;">
+                                        --- ADMIN / JUDGE PREVIEW BELOW ---
+                                    </div>
+                                    ${formattedPaper}
+                                </div>
+                                
+                                <div class="footer">
+                                    Document securely generated by Project Kavach.<br>
+                                    Only valid for preview configuration.
+                                </div>
+                            </div>
+                        </body>
+                    </html>
+                `;
 
-------------------------------------------------
-SHARE KEYS:
-------------------------------------------------
-${shareLines}
-
-================================================
-NOTE: This is an auto-generated secure document.
-================================================`;
-
-                const blob = new Blob([readableText], { type: 'text/plain' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `Kavach_Secure_Paper_${Date.now()}.txt`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                showAlert('Text document downloaded!', 'success');
+                // Open in a new tab to reliably trigger PDF print dialog from the extension
+                let printWindow = window.open('', '_blank');
+                if (printWindow) {
+                    printWindow.document.write(htmlContent);
+                    printWindow.document.close();
+                    setTimeout(() => {
+                        printWindow.print();
+                    }, 500);
+                } else {
+                    showAlert('Window blocked! Please allow popups.', 'error');
+                }
             });
 
         } catch (err) {
@@ -207,31 +261,35 @@ NOTE: This is an auto-generated secure document.
     document.getElementById('downloadPdfBtn').addEventListener('click', () => {
         if (!decryptedPaperStore) return;
 
-        let printWindow = window.open('', '', 'height=800,width=800');
-        printWindow.document.write(`
-            <html>
-                <head>
-                    <title>Kavach - Official Decrypted Exam Paper</title>
-                    <style>
-                        body { font-family: 'Helvetica Neue', Arial, sans-serif; padding: 40px; color: #111; line-height: 1.6; }
-                        h1 { text-align: center; color: #b91c1c; border-bottom: 2px solid #ccc; padding-bottom: 20px; }
-                        .content { margin-top: 30px; white-space: pre-wrap; font-size: 14pt; }
-                        .footer { margin-top: 50px; font-size: 10pt; color: #666; border-top: 1px solid #ccc; padding-top: 10px; text-align: center; }
-                    </style>
-                </head>
-                <body>
-                    <h1>KAVACH SECURE EXAM PAPER</h1>
-                    <div class="content">${decryptedPaperStore.replace(/</g, "&lt;")}</div>
-                    <div class="footer">Generated securely by Kavach Agent. Automatically watermarked for trace security.</div>
-                </body>
-            </html>
-        `);
-        printWindow.document.close();
+        let printWindow = window.open('', '_blank');
+        if (printWindow) {
+            printWindow.document.write(`
+                <html>
+                    <head>
+                        <title>Kavach - Official Decrypted Exam Paper</title>
+                        <style>
+                            body { font-family: 'Helvetica Neue', Arial, sans-serif; padding: 40px; color: #111; line-height: 1.6; }
+                            h1 { text-align: center; color: #b91c1c; border-bottom: 2px solid #ccc; padding-bottom: 20px; }
+                            .content { margin-top: 30px; white-space: pre-wrap; font-size: 14pt; }
+                            .footer { margin-top: 50px; font-size: 10pt; color: #666; border-top: 1px solid #ccc; padding-top: 10px; text-align: center; }
+                        </style>
+                    </head>
+                    <body>
+                        <h1>KAVACH SECURE EXAM PAPER</h1>
+                        <div class="content">${decryptedPaperStore.replace(/</g, "&lt;")}</div>
+                        <div class="footer">Generated securely by Kavach Agent. Automatically watermarked for trace security.</div>
+                    </body>
+                </html>
+            `);
+            printWindow.document.close();
 
-        // Wait a small delay to ensure images/CSS are loaded before printing
-        setTimeout(() => {
-            printWindow.print();
-        }, 250);
+            // Wait a small delay to ensure images/CSS are loaded before printing
+            setTimeout(() => {
+                printWindow.print();
+            }, 250);
+        } else {
+            showAlert('Window blocked! Please allow popups.', 'error');
+        }
     });
 
     // Trace Watermark
@@ -273,7 +331,7 @@ async function checkBackendConnection() {
     try {
         // Just checking if we can resolve the root API route or similar.
         // We'll just fetch the OpenAPI definition to see if it's alive.
-        const res = await fetch("http://127.0.0.1:8000/openapi.json");
+        const res = await fetch("http://localhost:8000/openapi.json");
         if (res.ok) {
             dot.className = 'pulse-dot green';
             text.textContent = 'Connected';
