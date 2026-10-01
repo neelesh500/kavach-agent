@@ -108,7 +108,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 <h4>Success! Encrypted Paper Created</h4>
                 <p class="small-info">Generated ${encryptData.shares.length} shares. Paper is masked.</p>
                 <div style="margin-top: 12px;">
-                    <button id="downloadSharesBtn" class="action-btn" style="background: var(--accent-color); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 11px;">
+                    <button id="downloadSharesBtn" class="action-btn">
                         ⬇️ Download Paper & Shares (Admin View)
                     </button>
                 </div>
