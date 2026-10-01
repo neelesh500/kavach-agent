@@ -108,7 +108,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 <p class="small-info">Generated ${encryptData.shares.length} shares. Paper is masked.</p>
                 <div style="margin-top: 12px;">
                     <button id="downloadSharesBtn" style="background: var(--accent-color); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 11px;">
-                        ⬇️ Download Paper & Shares
+                        ⬇️ Download Share Keys Ticket
                     </button>
                 </div>
             `;
