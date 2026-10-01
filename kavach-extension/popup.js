@@ -1,4 +1,4 @@
-const API_BASE = "http://127.0.0.1:8000/api/v1";
+const API_BASE = "http://localhost:8000/api/v1";
 
 document.addEventListener("DOMContentLoaded", () => {
     // Check Backend Connection automatically every 2 seconds
@@ -294,7 +294,7 @@ async function checkBackendConnection() {
     try {
         // Just checking if we can resolve the root API route or similar.
         // We'll just fetch the OpenAPI definition to see if it's alive.
-        const res = await fetch("http://127.0.0.1:8000/openapi.json");
+        const res = await fetch("http://localhost:8000/openapi.json");
         if (res.ok) {
             dot.className = 'pulse-dot green';
             text.textContent = 'Connected';
