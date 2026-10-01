@@ -140,16 +140,27 @@ ${shareLines}
 NOTE: This is an auto-generated secure document.
 ================================================`;
 
-                const blob = new Blob([readableText], { type: 'text/plain' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `Kavach_Secure_Paper_${Date.now()}.txt`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                showAlert('Text document downloaded!', 'success');
+                // Open in a new tab to reliably trigger PDF print dialog from the extension
+                let printWindow = window.open('', '_blank');
+                if (printWindow) {
+                    printWindow.document.write(`
+                        <html>
+                            <head>
+                                <title>Kavach_Secure_Paper_${Date.now()}</title>
+                                <style>
+                                    body { font-family: monospace; white-space: pre-wrap; padding: 40px; color: #000; line-height: 1.5; font-size: 14px; }
+                                </style>
+                            </head>
+                            <body>${readableText.replace(/</g, "&lt;")}</body>
+                        </html>
+                    `);
+                    printWindow.document.close();
+                    setTimeout(() => {
+                        printWindow.print();
+                    }, 250);
+                } else {
+                    showAlert('Window blocked! Please allow popups.', 'error');
+                }
             });
 
         } catch (err) {
@@ -207,31 +218,35 @@ NOTE: This is an auto-generated secure document.
     document.getElementById('downloadPdfBtn').addEventListener('click', () => {
         if (!decryptedPaperStore) return;
 
-        let printWindow = window.open('', '', 'height=800,width=800');
-        printWindow.document.write(`
-            <html>
-                <head>
-                    <title>Kavach - Official Decrypted Exam Paper</title>
-                    <style>
-                        body { font-family: 'Helvetica Neue', Arial, sans-serif; padding: 40px; color: #111; line-height: 1.6; }
-                        h1 { text-align: center; color: #b91c1c; border-bottom: 2px solid #ccc; padding-bottom: 20px; }
-                        .content { margin-top: 30px; white-space: pre-wrap; font-size: 14pt; }
-                        .footer { margin-top: 50px; font-size: 10pt; color: #666; border-top: 1px solid #ccc; padding-top: 10px; text-align: center; }
-                    </style>
-                </head>
-                <body>
-                    <h1>KAVACH SECURE EXAM PAPER</h1>
-                    <div class="content">${decryptedPaperStore.replace(/</g, "&lt;")}</div>
-                    <div class="footer">Generated securely by Kavach Agent. Automatically watermarked for trace security.</div>
-                </body>
-            </html>
-        `);
-        printWindow.document.close();
+        let printWindow = window.open('', '_blank');
+        if (printWindow) {
+            printWindow.document.write(`
+                <html>
+                    <head>
+                        <title>Kavach - Official Decrypted Exam Paper</title>
+                        <style>
+                            body { font-family: 'Helvetica Neue', Arial, sans-serif; padding: 40px; color: #111; line-height: 1.6; }
+                            h1 { text-align: center; color: #b91c1c; border-bottom: 2px solid #ccc; padding-bottom: 20px; }
+                            .content { margin-top: 30px; white-space: pre-wrap; font-size: 14pt; }
+                            .footer { margin-top: 50px; font-size: 10pt; color: #666; border-top: 1px solid #ccc; padding-top: 10px; text-align: center; }
+                        </style>
+                    </head>
+                    <body>
+                        <h1>KAVACH SECURE EXAM PAPER</h1>
+                        <div class="content">${decryptedPaperStore.replace(/</g, "&lt;")}</div>
+                        <div class="footer">Generated securely by Kavach Agent. Automatically watermarked for trace security.</div>
+                    </body>
+                </html>
+            `);
+            printWindow.document.close();
 
-        // Wait a small delay to ensure images/CSS are loaded before printing
-        setTimeout(() => {
-            printWindow.print();
-        }, 250);
+            // Wait a small delay to ensure images/CSS are loaded before printing
+            setTimeout(() => {
+                printWindow.print();
+            }, 250);
+        } else {
+            showAlert('Window blocked! Please allow popups.', 'error');
+        }
     });
 
     // Trace Watermark
