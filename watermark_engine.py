@@ -4,8 +4,11 @@ import uuid
 import datetime
 
 class WatermarkEngine:
+    """Provides imperceptible zero-width character steganography for anti-leak tracking"""
+    
     @staticmethod
     def embed_watermark(text_payload: str, center_id: str, session_token: str) -> str:
+        """Injects a traceable hidden watermark into the payload tail"""
         metadata = {
             "center_id": center_id,
             "timestamp": datetime.datetime.utcnow().isoformat(),
@@ -30,6 +33,7 @@ class WatermarkEngine:
 
     @staticmethod
     def extract_watermark(watermarked_payload: str) -> dict:
+        """Decodes zero-width string characters back into metadata payload"""
         zwsp_chars = [c for c in watermarked_payload if c in ('\u200b', '\u200c')]
         if not zwsp_chars:
             return {}
