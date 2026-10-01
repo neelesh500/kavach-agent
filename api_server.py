@@ -1,11 +1,12 @@
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Tuple
 import time
 import os
 import base64
 
-from database_mongodb import DatabaseMongoDB
+from database_mock import DatabaseMock
 from similarity_guard import SimilarityGuard
 from crypto_core import CryptoManager, DoubleGateEnforcer
 from watermark_engine import WatermarkEngine
@@ -14,8 +15,17 @@ from ai_engine import ZEEAAIEngine
 
 app = FastAPI(title="Project Kavach Backend API")
 
-# MongoDB database
-db = DatabaseMongoDB()
+# Setup CORS to allow extension popup to communicate with backend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins (including chrome-extension://)
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
+
+# Use SQLite Mock DB instead of MongoDB to run locally without setup
+db = DatabaseMock()
 
 # Similarity checker
 similarity_guard = SimilarityGuard(threshold=0.85)
@@ -30,7 +40,7 @@ ai_engine = ZEEAAIEngine()
 
 @app.on_event("startup")
 async def startup_event():
-    await db.check_connection()
+    pass
 
 
 # ---------------------------------------------------------
@@ -87,7 +97,7 @@ async def submit_question(payload: QuestionPayload):
     # Get all existing questions from MongoDB
     existing_questions = [
         q["text"]
-        for q in await db.get_questions()
+        for q in db.get_questions()
     ]
 
     # Check whether the question is a duplicate
@@ -97,7 +107,7 @@ async def submit_question(payload: QuestionPayload):
     ):
 
         # Store rejection in audit logs
-        await db.log_audit(
+        db.log_audit(
             "QUESTION_REJECTED",
             {
                 "reason": "duplicate",
@@ -111,13 +121,13 @@ async def submit_question(payload: QuestionPayload):
         )
 
     # Add question to MongoDB
-    await db.add_question(
+    db.add_question(
         payload.question_text,
         payload.metadata
     )
 
     # Store acceptance in audit logs
-    await db.log_audit(
+    db.log_audit(
         "QUESTION_ACCEPTED",
         {
             "metadata": payload.metadata
@@ -137,7 +147,7 @@ async def submit_question(payload: QuestionPayload):
 @app.post("/api/v1/paper/generate")
 async def generate_paper(req: GeneratePaperRequest):
     # Get all questions
-    db_questions = await db.get_questions()
+    db_questions = db.get_questions()
 
     if not db_questions:
         raise HTTPException(status_code=400, detail="Database is empty. Seed questions first.")
@@ -183,7 +193,7 @@ async def generate_paper(req: GeneratePaperRequest):
 
     paper_text = "\n\n".join(paper_lines)
 
-    await db.log_audit("PAPER_GENERATED_VIA_AI", {"num_questions": len(final_questions)})
+    db.log_audit("PAPER_GENERATED_VIA_AI", {"num_questions": len(final_questions)})
 
     return {
         "status": "success",
@@ -235,8 +245,9 @@ async def encrypt_paper(req: EncryptRequest):
     EXAM_STATE["master_secret"] = master_secret
     EXAM_STATE["encrypted_paper"] = encrypted
     EXAM_STATE["shares"] = shares
-    shares_str = [(str(x), str(y)) for x, y in shares]
-    
+    # Send shares as strings to avoid JS double-precision dataloss
+    shares_str = [[str(x), str(y)] for x, y in shares]
+
     return {
         "status": "success",
         "shares": shares_str,
@@ -267,7 +278,7 @@ async def unlock_paper(req: UnlockRequest):
         len(req.shares)
     ):
 
-        await db.log_audit(
+        db.log_audit(
             "UNAUTHORIZED_UNLOCK",
             {
                 "center_id": req.center_id,
@@ -311,7 +322,7 @@ async def unlock_paper(req: UnlockRequest):
         )
 
         # Store successful unlock in audit logs
-        await db.log_audit(
+        db.log_audit(
             "PAPER_UNLOCKED",
             {
                 "center_id": req.center_id
@@ -325,7 +336,7 @@ async def unlock_paper(req: UnlockRequest):
     except Exception as e:
 
         # Store failed unlock attempt
-        await db.log_audit(
+        db.log_audit(
             "UNLOCK_FAILED",
             {
                 "center_id": req.center_id,
@@ -373,3 +384,6 @@ async def fetch_encrypted():
         "exam_start_time": EXAM_STATE["exam_start_time"]
     }
 
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("api_server:app", host="0.0.0.0", port=8000, reload=True)

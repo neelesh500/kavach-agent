@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kavach Security Agent</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="glass-header">
+            <div class="logo">
+                <div class="shield-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
+                </div>
+                <h1>Kavach Agent</h1>
+            </div>
+            <div class="status-indicator">
+                <span id="backendStatus" class="pulse-dot red"></span>
+                <span id="backendStatusText" class="status-text">Disconnected</span>
+            </div>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="tabs">
+            <button class="tab-btn active" data-target="submit-view">Submit Q</button>
+            <button class="tab-btn" data-target="generate-view">Generate</button>
+            <button class="tab-btn" data-target="decrypt-view">Decrypt</button>
+            <button class="tab-btn" data-target="trace-view">Trace</button>
+        </nav>
+
+        <!-- Content Views -->
+        <main class="content-area">
+
+            <!-- Submit Question View -->
+            <section id="submit-view" class="view-section active">
+                <h2>Submit New Question</h2>
+                <p class="subtitle">Protected by Similarity Guard</p>
+                <div class="form-group">
+                    <label>Question Text</label>
+                    <textarea id="questionInput" placeholder="Enter question text here..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Metadata (JSON)</label>
+                    <textarea id="metadataInput" placeholder='{"subject": "Math", "difficulty": "hard"}'></textarea>
+                </div>
+                <button id="submitBtn" class="primary-btn">
+                    <span>Submit Question</span>
+                </button>
+            </section>
+
+            <!-- Generate Paper View -->
+            <section id="generate-view" class="view-section hidden">
+                <h2>Generate Paper</h2>
+                <p class="subtitle">Secure encyption formulation</p>
+                <div class="form-group">
+                    <label>Number of Questions</label>
+                    <input type="number" id="numQuestionsInput" value="5" min="1" max="50">
+                </div>
+                <button id="generateBtn" class="primary-btn">
+                    <span>Generate & Encrypt</span>
+                </button>
+                <div id="paperResultBox" class="result-box hidden">
+                    <h4>Success! Encrypted Paper Created</h4>
+                    <p class="small-info">Paper encrypted with thresholds.</p>
+                </div>
+            </section>
+
+            <!-- Decrypt Paper View -->
+            <section id="decrypt-view" class="view-section hidden">
+                <h2>Decrypt Paper</h2>
+                <p class="subtitle">AI Enforcer: Enter Shares to Unlock</p>
+                <div class="form-group">
+                    <label>Shares (Paste JSON array e.g. [[1,2], [3,4]])</label>
+                    <textarea id="decryptSharesInput" placeholder="Paste minimum 3 shares JSON array here..."
+                        style="min-height:60px"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Center ID</label>
+                    <input type="text" id="decryptCenterInput" value="CENTER_001">
+                </div>
+                <button id="decryptBtn" class="primary-btn">
+                    <span>Decrypt Encrypted Paper</span>
+                </button>
+                <div id="decryptResultBox" class="result-box hidden">
+                    <pre id="decryptResultText"></pre>
+                    <div style="margin-top: 12px;">
+                        <button id="downloadPdfBtn"
+                            style="background: var(--accent-color); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 11px;">
+                            ⬇️ Print/Save as PDF
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Trace Watermark View -->
+            <section id="trace-view" class="view-section hidden">
+                <h2>Trace Watermark</h2>
+                <p class="subtitle">Identify leaked documents</p>
+                <div class="form-group">
+                    <label>Watermarked Payload</label>
+                    <textarea id="tracePayloadInput" placeholder="Paste watermarked text..."></textarea>
+                </div>
+                <button id="traceBtn" class="primary-btn">
+                    <span>Run Trace Routine</span>
+                </button>
+                <div id="traceResultBox" class="result-box hidden">
+                    <pre id="traceResultText"></pre>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Dynamic Alerts Container -->
+        <div id="alertsContainer"></div>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+
+</html>
