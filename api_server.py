@@ -40,7 +40,7 @@ ai_engine = ZEEAAIEngine()
 
 @app.on_event("startup")
 async def startup_event():
-    await db.check_connection()
+    pass
 
 
 # ---------------------------------------------------------
@@ -97,7 +97,7 @@ async def submit_question(payload: QuestionPayload):
     # Get all existing questions from MongoDB
     existing_questions = [
         q["text"]
-        for q in await db.get_questions()
+        for q in db.get_questions()
     ]
 
     # Check whether the question is a duplicate
@@ -107,7 +107,7 @@ async def submit_question(payload: QuestionPayload):
     ):
 
         # Store rejection in audit logs
-        await db.log_audit(
+        db.log_audit(
             "QUESTION_REJECTED",
             {
                 "reason": "duplicate",
@@ -121,13 +121,13 @@ async def submit_question(payload: QuestionPayload):
         )
 
     # Add question to MongoDB
-    await db.add_question(
+    db.add_question(
         payload.question_text,
         payload.metadata
     )
 
     # Store acceptance in audit logs
-    await db.log_audit(
+    db.log_audit(
         "QUESTION_ACCEPTED",
         {
             "metadata": payload.metadata
@@ -147,7 +147,7 @@ async def submit_question(payload: QuestionPayload):
 @app.post("/api/v1/paper/generate")
 async def generate_paper(req: GeneratePaperRequest):
     # Get all questions
-    db_questions = await db.get_questions()
+    db_questions = db.get_questions()
 
     if not db_questions:
         raise HTTPException(status_code=400, detail="Database is empty. Seed questions first.")
@@ -193,7 +193,7 @@ async def generate_paper(req: GeneratePaperRequest):
 
     paper_text = "\n\n".join(paper_lines)
 
-    await db.log_audit("PAPER_GENERATED_VIA_AI", {"num_questions": len(final_questions)})
+    db.log_audit("PAPER_GENERATED_VIA_AI", {"num_questions": len(final_questions)})
 
     return {
         "status": "success",
@@ -278,7 +278,7 @@ async def unlock_paper(req: UnlockRequest):
         len(req.shares)
     ):
 
-        await db.log_audit(
+        db.log_audit(
             "UNAUTHORIZED_UNLOCK",
             {
                 "center_id": req.center_id,
@@ -322,7 +322,7 @@ async def unlock_paper(req: UnlockRequest):
         )
 
         # Store successful unlock in audit logs
-        await db.log_audit(
+        db.log_audit(
             "PAPER_UNLOCKED",
             {
                 "center_id": req.center_id
@@ -336,7 +336,7 @@ async def unlock_paper(req: UnlockRequest):
     except Exception as e:
 
         # Store failed unlock attempt
-        await db.log_audit(
+        db.log_audit(
             "UNLOCK_FAILED",
             {
                 "center_id": req.center_id,
