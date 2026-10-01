@@ -146,28 +146,16 @@ async def submit_question(payload: QuestionPayload):
 
 @app.post("/api/v1/paper/generate")
 async def generate_paper(req: GeneratePaperRequest):
-    # Get all questions
-    db_questions = db.get_questions()
-
-    if not db_questions:
-        raise HTTPException(status_code=400, detail="Database is empty. Seed questions first.")
-
-    try:
-        # Pass to the AI Engine for Blueprint compliance
-        selected_ids = await ai_engine.build_paper_with_ai(db_questions)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-    # Filter out the AI selected questions
-    final_questions = [q for q in db_questions if q["id"] in selected_ids]
+    # Get questions up to requested number limit
+    final_questions = db.get_random_questions(req.num_questions)
 
     if not final_questions:
-        raise HTTPException(status_code=400, detail="AI couldn't find matching questions for the blueprint.")
+        raise HTTPException(status_code=400, detail="Database is empty. Seed questions first.")
 
     # Create exam paper
     paper_lines = [
-        "====== CONFIDENTIAL EXAM PAPER (ZEEA BLUEPRINT) ======",
-        "Total Marks: 720 | Total Questions: 180 | +4 per correct",
+        "====== CONFIDENTIAL EXAM PAPER ======",
+        f"Generated Questions: {len(final_questions)} | Secure Exam Environment",
         "=" * 54
     ]
     
@@ -186,12 +174,15 @@ async def generate_paper(req: GeneratePaperRequest):
         
         options = meta.get("options", [])
         if options:
-            for opt in options:
-                paper_lines.append(f"   {opt}")
+            for idx, opt in enumerate(options):
+                # mapping 0,1,2,3 to A,B,C,D
+                letter = chr(65 + idx)
+                paper_lines.append(f"   {letter}) {opt}")
         else:
-            paper_lines.append("   A) ...\n   B) ...\n   C) ...\n   D) ...")
+            # If no options, provide a blank space for subjective answers
+            paper_lines.append("\n   Answer: ______________________________\n")
 
-    paper_text = "\n\n".join(paper_lines)
+    paper_text = "\n".join(paper_lines)
 
     db.log_audit("PAPER_GENERATED_VIA_AI", {"num_questions": len(final_questions)})
 
