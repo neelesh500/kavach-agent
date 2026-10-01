@@ -4,6 +4,7 @@ from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from typing import Tuple, List
 
 class CryptoManager:
+    """Manages Shamir Secret Sharing cryptography and AES-GCM encryption"""
     # Prime used for Shamir's secret sharing (256-bit prime)
     PRIME = 2**256 - 2**32 - 977
     
@@ -71,6 +72,7 @@ class CryptoManager:
             raise ValueError("Decryption failed. Invalid key or modified ciphertext.")
 
 class DoubleGateEnforcer:
+    """Enforces strict multi-factor unlock conditions for encrypted papers"""
     def __init__(self, exam_start_time: float, threshold_k: int):
         self.exam_start_time = exam_start_time
         self.threshold_k = threshold_k
