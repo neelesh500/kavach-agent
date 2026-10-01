@@ -3,6 +3,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 import logging
 
 class SimilarityGuard:
+    """Provides NLP-based document duplication prevention"""
     def __init__(self, threshold: float = 0.85):
         self.threshold = threshold
         self.vectorizer = TfidfVectorizer(stop_words='english')
