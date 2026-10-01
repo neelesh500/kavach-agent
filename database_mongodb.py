@@ -4,6 +4,10 @@ from typing import Dict, List
 
 from dotenv import load_dotenv
 from pymongo import AsyncMongoClient
+try:
+    from mongomock_motor import AsyncMongoMockClient
+except ImportError:
+    AsyncMongoMockClient = None
 
 load_dotenv()
 
@@ -19,11 +23,25 @@ class DatabaseMongoDB:
         if not database_name:
             raise ValueError("MONGODB_DATABASE is not configured")
 
-        self.client = AsyncMongoClient(mongo_uri)
+        if mongo_uri.startswith("mock://"):
+            if AsyncMongoMockClient is None:
+                raise ValueError("mongomock_motor is required for mock:// URIs")
+            self.client = AsyncMongoMockClient()
+        else:
+            self.client = AsyncMongoClient(mongo_uri)
+            
         self.db = self.client[database_name]
-
         self.questions = self.db["questions"]
         self.audit_logs = self.db["audit_logs"]
+
+    async def _seed_mock_if_needed(self):
+        # Auto-seed mock db with 180 questions if empty (for ZEEA testing)
+        count = await self.questions.count_documents({})
+        if count == 0 and os.path.exists("zeea_mock_db.json"):
+            import json
+            with open("zeea_mock_db.json", "r") as f:
+                mock_data = json.load(f)
+                await self.questions.insert_many(mock_data)
 
     async def check_connection(self):
         await self.client.admin.command("ping")
@@ -39,6 +57,7 @@ class DatabaseMongoDB:
         return str(result.inserted_id)
 
     async def get_questions(self) -> List[Dict]:
+        await self._seed_mock_if_needed()
         cursor = self.questions.find({})
 
         questions = []

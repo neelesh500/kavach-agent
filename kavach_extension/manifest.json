@@ -1,0 +1,17 @@
+{
+    "manifest_version": 3,
+    "name": "Kavach Extension",
+    "version": "1.0",
+    "description": "Chrome extension to control Project Kavach Backend API",
+    "action": {
+        "default_popup": "popup.html",
+        "default_title": "Project Kavach"
+    },
+    "permissions": [
+        "activeTab",
+        "storage"
+    ],
+    "host_permissions": [
+        "http://localhost:8000/*"
+    ]
+}
